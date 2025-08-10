@@ -16,7 +16,7 @@ jobs:
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.5.3
       with:
-        ssh-private-key: ${{ secrets.AZURE_PASSWORD }}
+        ssh-private-key: ${{ secrets.AZURE_SSH_PASSWORD }}
 
     - name: Copy Docker Compose files to Azure VM
       run: |
