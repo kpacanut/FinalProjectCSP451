@@ -1,0 +1,15 @@
+{
+  "name": "product-api",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "main": "index.cjs",
+  "dependencies": {
+    "express": "^4.19.2",
+    "@azure/storage-queue": "^12.15.0",
+    "cors": "^2.8.5"
+  }
+}
+
+
+
+

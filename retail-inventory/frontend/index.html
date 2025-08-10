@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Kath’s Store — Update Stock & Product</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg1:#fff5fb; --bg2:#f6fffb;
+      --card:#ffffff; --ink:#3a2a3f;
+      --muted:#7a7180; --pill:#f9e6ff; --pill2:#e7fff5;
+      --accent:#ff69b4; --accent2:#7c4dff; --ok:#22c55e; --warn:#f97316; --bad:#ef4444;
+      --btn:#ff8ac9; --btn2:#7c9bff; --btn3:#9be2c9;
+      --ring: 0 10px 30px rgba(0,0,0,.08);
+    }
+    html,body{height:100%}
+    body{
+      margin:0; font:16px/1.4 system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif; color:var(--ink);
+      background:
+        radial-gradient(1200px 1200px at -10% -10%, var(--bg1), transparent 60%),
+        radial-gradient(1200px 1200px at 110% 110%, var(--bg2), transparent 60%),
+        repeating-radial-gradient(circle at 20% 30%, #ffd6ea 0 10px, transparent 10px 40px),
+        repeating-radial-gradient(circle at 80% 70%, #d6fff1 0 10px, transparent 10px 40px);
+      background-color:#fff;
+    }
+    .wrap{max-width:920px;margin:64px auto;padding:0 20px}
+    .card{
+      background:var(--card); border-radius:22px; padding:28px 26px; box-shadow:var(--ring);
+      backdrop-filter: blur(6px); border: 1px solid #f0e8f3;
+    }
+    h1{margin:8px 0 18px;font-size:32px; font-weight:800; letter-spacing:.2px}
+    .tag{display:inline-block;margin-bottom:10px;padding:6px 10px;border-radius:999px;background:var(--pill);color:#6b46c1;font-weight:700;font-size:12px}
+    .grid{display:grid;grid-template-columns:1fr 210px;gap:12px}
+    label{font-size:12px;color:var(--muted);display:block;margin:8px 0 6px}
+    input{
+      width:100%; padding:12px 14px; border:1px solid #eadff1; border-radius:12px; outline:none;
+      background:#fff; transition:.15s; font-size:15px
+    }
+    input:focus{border-color:#caa7ff; box-shadow:0 0 0 4px rgba(124,77,255,.12)}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 4px}
+    .btn{border:none;border-radius:999px;padding:10px 16px;font-weight:700;color:#39243e;cursor:pointer;box-shadow:var(--ring)}
+    .b1{background:var(--btn)}
+    .b2{background:var(--btn2); color:white}
+    .b3{background:var(--btn3)}
+    .pills{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+    .pill{
+      font-size:12px; padding:6px 10px; border-radius:999px; background:#f4f1fa; color:#493959; border:1px solid #e9e1f1
+    }
+    .pill.ok{background:#ecfdf3;color:#166534;border-color:#bbf7d0}
+    .pill.bad{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+    .pill.warn{background:#fff7ed;color:#9a3412;border-color:#fed7aa}
+    .alert{margin-top:12px; padding:12px 14px; border-radius:14px; border:1px solid #e9e1f1; background:#fbf8ff; color:#513a5f}
+    .alert.ok{background:#ecfdf5;border-color:#bbf7d0;color:#065f46}
+    .alert.bad{background:#fef2f2;border-color:#fecaca;color:#7f1d1d}
+    .hint{margin-top:8px;color:#8a7d95;font-size:12px}
+    .row{margin-top:8px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="tag">sparkly • floral • fabulous</div>
+      <h1>Kath’s Store — <span style="color:var(--accent2)">Update Stock</span> & <span style="color:var(--accent)">Product</span></h1>
+
+      <div class="grid">
+        <div>
+          <label>Product ID</label>
+          <input id="productId" placeholder="sku-999" value="sku-999" />
+        </div>
+        <div>
+          <label>Quantity</label>
+          <input id="qty" type="number" min="0" step="1" value="100" />
+        </div>
+      </div>
+
+      <div class="row">
+        <label>Product Name</label>
+        <input id="pname" placeholder="Blooming Tee" />
+      </div>
+
+      <div class="btns">
+        <button class="btn b1" id="updateBtn">Update Both</button>
+        <button class="btn b2" id="healthBtn">Check API Health</button>
+        <button class="btn b3" id="resetBtn">Reset Form</button>
+      </div>
+
+      <div class="pills">
+        <div class="pill" id="invUrl">Inventory API: …</div>
+        <div class="pill" id="prodUrl">Product API: …</div>
+        <div class="pill" id="cid">Correlation: …</div>
+        <div class="pill" id="authPill">Auth: <span id="authState">key not set</span></div>
+      </div>
+
+      <div class="alert" id="msg">Ready.</div>
+      <div class="hint">
+        Tip: override API bases or key *before this page loads* by defining:
+        <span class="mono">window.API_URL_INVENTORY</span> / <span class="mono">window.API_URL_PRODUCT</span> /
+        <span class="mono">window.API_KEY</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Optional inline overrides -->
+  <script>
+    // Auto-detect VM address (works when served from same VM)
+    const host = location.hostname || '127.0.0.1';
+    const defaultInv = `http://${host}:5001`;
+    const defaultProd = `http://${host}:5002`;
+
+    // Allow external overrides (env.js or similar)
+    const INV_BASE  = (window.API_URL_INVENTORY || defaultInv).replace(/\/+$/,'');
+    const PROD_BASE = (window.API_URL_PRODUCT   || defaultProd).replace(/\/+$/,'');
+    // API key: can be set via window.API_KEY, or we fallback to localStorage, or default dev key
+    const KEY = (window.API_KEY || localStorage.getItem('x_api_key') || 'dev-key-001');
+
+    // Persist shown key (only the value, not saved automatically unless changed below)
+    localStorage.setItem('x_api_key', KEY);
+
+    // UI refs
+    const $ = sel => document.querySelector(sel);
+    const invUrl = $('#invUrl'), prodUrl = $('#prodUrl'), cidPill = $('#cid'), authPill = $('#authPill'), authState = $('#authState');
+    const msg = $('#msg');
+
+    invUrl.textContent  = `Inventory API: ${INV_BASE}`;
+    prodUrl.textContent = `Product API: ${PROD_BASE}`;
+    authState.textContent = KEY ? 'key accepted' : 'key missing';
+    if (KEY) authPill.classList.add('ok'); else authPill.classList.add('warn');
+
+    function setMsg(text, cls=''){ msg.textContent = text; msg.className = 'alert ' + cls; }
+    function newCid(){ return 'cid-' + Math.random().toString(36).slice(2,10); }
+
+    async function health() {
+      setMsg('Checking API health…', '');
+      try {
+        const [inv, prod] = await Promise.all([
+          fetch(`${INV_BASE}/health`, { headers:{ 'x-api-key': KEY } }),
+          fetch(`${PROD_BASE}/health`)
+        ]);
+        const okInv = inv.ok;
+        const okProd = prod.ok;
+        if (okInv && okProd) setMsg('Inventory: OK • Product: OK', 'ok');
+        else if (!okInv && okProd) setMsg('Inventory: ❌ • Product: OK', 'bad');
+        else if (okInv && !okProd) setMsg('Inventory: OK • Product: ❌', 'bad');
+        else setMsg('Both APIs unreachable ❌', 'bad');
+      } catch(e){ setMsg('Health check error: ' + e.message, 'bad'); }
+    }
+
+    async function updateBoth() {
+      const productId = $('#productId').value.trim();
+      const qty = parseInt($('#qty').value,10);
+      const name = $('#pname').value.trim() || 'Updated Product';
+      const correlationId = newCid();
+      cidPill.textContent = `Correlation: ${correlationId}`;
+
+      if (!productId || Number.isNaN(qty)) { setMsg('Please provide productId and quantity.', 'bad'); return; }
+
+      setMsg('Sending updates…', '');
+      try {
+        // Inventory: /update-stock (requires x-api-key)
+        const invRes = await fetch(`${INV_BASE}/update-stock`, {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'x-api-key': KEY },
+          body: JSON.stringify({ productId, qty, correlationId })
+        });
+
+        // Product: /products/upsert
+        const prodRes = await fetch(`${PROD_BASE}/products/upsert`, {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ productId, name })
+        });
+
+        const invOk = invRes.ok;
+        const prodOk = prodRes.ok;
+
+        if (invOk && prodOk) setMsg('✅ Updated inventory & product successfully!', 'ok');
+        else if (!invOk && prodOk) setMsg('⚠️ Product ok, inventory failed (check API key / body).', 'bad');
+        else if (invOk && !prodOk) setMsg('⚠️ Inventory ok, product failed.', 'bad');
+        else setMsg('❌ Both updates failed.', 'bad');
+      } catch(e){ setMsg('Update error: ' + e.message, 'bad'); }
+    }
+
+    function resetForm() {
+      $('#productId').value = 'sku-999';
+      $('#qty').value = 100;
+      $('#pname').value = '';
+      cidPill.textContent = 'Correlation: ' + newCid();
+      setMsg('Form reset.', '');
+    }
+
+    // wire up
+    $('#healthBtn').addEventListener('click', health);
+    $('#updateBtn').addEventListener('click', updateBoth);
+    $('#resetBtn').addEventListener('click', resetForm);
+
+    // initial
+    cidPill.textContent = 'Correlation: ' + newCid();
+    setMsg('Ready. Detected APIs on 5001/5002 (override with window.API_URL_* / window.API_KEY).', '');
+  </script>
+</body>
+</html>

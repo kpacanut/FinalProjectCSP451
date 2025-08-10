@@ -1,0 +1,26 @@
+services:
+  inventory-api:
+    build: ./inventory-api
+    env_file:
+      - .env
+    environment:
+      - PORT=5001
+    ports:
+      - "5001:5001"
+
+  product-api:
+    build: ./product-api
+    environment:
+      - PORT=5002
+    ports:
+      - "5002:5002"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - inventory-api
+      - product-api
+
+
